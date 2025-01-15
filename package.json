@@ -1,0 +1,20 @@
+{
+  "name": "perspectivetransform",
+  "version": "1.0.0",                     
+  "type": "module",
+  "source": "src/index.js",            
+  "main": "dist/index.js",
+  "module": "dist/index.module.js",
+  "unpkg": "dist/index.umd.js",
+  "scripts": {
+    "build": "microbundle",           
+    "dev": "microbundle watch"        
+  },
+  "devDependencies": {
+    "microbundle": "^0.15.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/petit-polisson/Perspective-Transform.git"
+  }
+}
