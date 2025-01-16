@@ -15,6 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/petit-polisson/Perspective-Transform.git"
-  }
+    "url": "git+https://github.com/ZilbaM/Perspective-Transform.git"
+  },
+    "jsx": "React.createElement"
 }
