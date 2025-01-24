@@ -4,29 +4,31 @@
   "type": "module",
   "source": "src/index.js",
   "main": "dist/index.js",
+  "files": [
+    "dist",
+    "src"
+  ],
   "module": "dist/index.module.js",
   "unpkg": "dist/index.umd.js",
   "scripts": {
-    "build": "microbundle --jsx React.createElement",
-    "dev": "microbundle watch --jsx React.createElement"
+    "build": "webpack"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.7",
     "@babel/preset-react": "^7.26.3",
-    "microbundle": "^0.15.1"
+    "babel-loader": "^9.2.1",
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZilbaM/react-perspective-transform"
   },
-  "jsx": "React.createElement",
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
-  },
-  "babel": {
-    "presets": [
-      "@babel/preset-react"
-    ]
   }
 }
