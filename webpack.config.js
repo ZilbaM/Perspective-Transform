@@ -5,7 +5,12 @@ export default {
   output: {
     path: path.resolve('dist'),
     filename: 'index.js',
-    libraryTarget: 'commonjs2',
+    library: {
+      type: 'module', // Outputs an ES module
+    },
+  },
+  experiments: {
+    outputModule: true, // Enables outputting ES modules
   },
   module: {
     rules: [
