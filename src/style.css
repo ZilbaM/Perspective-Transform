@@ -1,0 +1,15 @@
+.perspective-container {
+    position: relative;
+    width: fit-content;
+  }
+  
+  .control-point {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+  }
+  

@@ -1,20 +1,5 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
-import styled from "styled-components";
-
-const PerspectiveContainer = styled.div`
-  width: fit-content;
-  position: relative;
-`;
-
-const ControlPoint = styled.div`
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background-color: red;
-  border-radius: 50%;
-  cursor: pointer;
-  transform: translate(-50%, -50%);
-`;
+import "./PerspectiveTransform.css"; // Import the CSS file
 
 function PerspectiveTransform({ children }) {
   const containerRef = useRef(null);
@@ -30,7 +15,6 @@ function PerspectiveTransform({ children }) {
   // Function to compute the CSS matrix
   function computeCssMatrix(srcPoints, dstPoints) {
     function solve(A, b) {
-      // Solve A * x = b
       const det =
         A[0] * (A[4] * A[8] - A[5] * A[7]) -
         A[1] * (A[3] * A[8] - A[5] * A[6]) +
@@ -122,7 +106,6 @@ function PerspectiveTransform({ children }) {
 
     const m3 = multmm(m2, adj(m1));
 
-    // Normalize the matrix
     for (let i = 0; i < m3.length; i += 1) {
       m3[i] /= m3[8];
     }
@@ -149,11 +132,9 @@ function PerspectiveTransform({ children }) {
     return `matrix3d(${matrix3d.join(",")})`;
   }
 
-  // Use useLayoutEffect to ensure the DOM is ready
   useLayoutEffect(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      // Ensure width and height are not zero
       if (rect.width > 0 && rect.height > 0) {
         setPoints({
           topLeft: { x: 0, y: 0 },
@@ -163,12 +144,12 @@ function PerspectiveTransform({ children }) {
         });
       }
     }
-  }, [children]); // Re-run when children change
+  }, [children]);
 
   useLayoutEffect(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return; // Skip if dimensions are zero
+      if (rect.width === 0 || rect.height === 0) return;
 
       const srcCorners = [
         { x: 0, y: 0 },
@@ -213,7 +194,6 @@ function PerspectiveTransform({ children }) {
     document.addEventListener("mouseup", onUp);
   };
 
-  // Toggle editable state with Shift+P
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.shiftKey && (e.key === "p" || e.key === "P")) {
@@ -227,7 +207,7 @@ function PerspectiveTransform({ children }) {
   }, []);
 
   return (
-    <PerspectiveContainer ref={containerRef}>
+    <div ref={containerRef} className="perspective-container">
       <div
         style={{
           transform: matrix,
@@ -241,13 +221,14 @@ function PerspectiveTransform({ children }) {
 
       {editable &&
         Object.entries(points).map(([corner, { x, y }]) => (
-          <ControlPoint
+          <div
             key={corner}
+            className="control-point"
             style={{ left: x, top: y }}
             onMouseDown={(e) => handleDrag(e, corner)}
           />
         ))}
-    </PerspectiveContainer>
+    </div>
   );
 }
 
