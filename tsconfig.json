@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    // Your target, module, etc. can differ depending on your environment
+    "target": "es5",
+    "module": "esnext",
+    "jsx": "react-jsx",
+    // Generate declaration files
+    "declaration": true,
+    // Emit the declaration files to `dist`
+    "declarationDir": "dist",
+    // Keep the JS output together with the declarations
+    "outDir": "dist",
+    // Needed so that TS doesn't complain about outDir being the same or overshadowing
+    "rootDir": ".",
+    // Ensure modules are resolved the usual way in Node
+    "moduleResolution": "node",
+    // Make sure the code is strict
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  // Include your source files
+  "include": ["src/**/*"],
+  // Exclude built files and node_modules
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,20 +1,44 @@
-import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
-import "./style.css"; // Import the CSS file
+import React, {
+  useState,
+  useRef,
+  useLayoutEffect,
+  useEffect,
+  MouseEvent,
+  ReactNode,
+  FC,
+} from "react";
+import "./style.css";
 
-function PerspectiveTransform({ children }) {
-  const containerRef = useRef(null);
-  const [points, setPoints] = useState({
+interface Corner {
+  x: number;
+  y: number;
+}
+
+interface Points {
+  topLeft: Corner;
+  topRight: Corner;
+  bottomRight: Corner;
+  bottomLeft: Corner;
+}
+
+interface PerspectiveTransformProps {
+  children: ReactNode;
+}
+
+const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [points, setPoints] = useState<Points>({
     topLeft: { x: 0, y: 0 },
     topRight: { x: 100, y: 0 },
     bottomRight: { x: 100, y: 100 },
     bottomLeft: { x: 0, y: 100 },
   });
   const [matrix, setMatrix] = useState("");
-  const [editable, setEditable] = useState(false); // Editable state
+  const [editable, setEditable] = useState(false);
 
   // Function to compute the CSS matrix
-  function computeCssMatrix(srcPoints, dstPoints) {
-    function solve(A, b) {
+  function computeCssMatrix(srcPoints: Corner[], dstPoints: Corner[]): string {
+    function solve(A: number[], b: number[]): number[] | null {
       const det =
         A[0] * (A[4] * A[8] - A[5] * A[7]) -
         A[1] * (A[3] * A[8] - A[5] * A[6]) +
@@ -43,7 +67,7 @@ function PerspectiveTransform({ children }) {
       ];
     }
 
-    function adj(m) {
+    function adj(m: number[]): number[] {
       return [
         m[4] * m[8] - m[5] * m[7],
         m[2] * m[7] - m[1] * m[8],
@@ -57,8 +81,8 @@ function PerspectiveTransform({ children }) {
       ];
     }
 
-    function multmm(a, b) {
-      const c = [];
+    function multmm(a: number[], b: number[]): number[] {
+      const c: number[] = [];
       for (let i = 0; i < 3; i += 1) {
         for (let j = 0; j < 3; j += 1) {
           let cij = 0;
@@ -71,7 +95,12 @@ function PerspectiveTransform({ children }) {
       return c;
     }
 
-    function basisToPoints(p1, p2, p3, p4) {
+    function basisToPoints(
+      p1: Corner,
+      p2: Corner,
+      p3: Corner,
+      p4: Corner
+    ): number[] | null {
       const m = [p1.x, p2.x, p3.x, p1.y, p2.y, p3.y, 1, 1, 1];
       const v = [p4.x, p4.y, 1];
       const s = solve(m, v);
@@ -102,7 +131,7 @@ function PerspectiveTransform({ children }) {
       dstPoints[2],
       dstPoints[3]
     );
-    if (m1 === null || m2 === null) return "";
+    if (!m1 || !m2) return "";
 
     const m3 = multmm(m2, adj(m1));
 
@@ -151,13 +180,13 @@ function PerspectiveTransform({ children }) {
       const rect = containerRef.current.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
 
-      const srcCorners = [
+      const srcCorners: Corner[] = [
         { x: 0, y: 0 },
         { x: rect.width, y: 0 },
         { x: rect.width, y: rect.height },
         { x: 0, y: rect.height },
       ];
-      const dstCorners = [
+      const dstCorners: Corner[] = [
         points.topLeft,
         points.topRight,
         points.bottomRight,
@@ -168,11 +197,11 @@ function PerspectiveTransform({ children }) {
     }
   }, [points]);
 
-  const handleDrag = (e, corner) => {
+  const handleDrag = (e: React.MouseEvent<HTMLDivElement>, corner: string) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const onMove = (event) => {
+    const onMove = (event: globalThis.MouseEvent) => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -195,7 +224,7 @@ function PerspectiveTransform({ children }) {
   };
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.shiftKey && (e.key === "p" || e.key === "P")) {
         setEditable((prevEditable) => !prevEditable);
       }
@@ -230,6 +259,6 @@ function PerspectiveTransform({ children }) {
         ))}
     </div>
   );
-}
+};
 
-export default PerspectiveTransform;
+export default PerspectiveTransform
