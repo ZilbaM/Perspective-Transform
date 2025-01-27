@@ -3,8 +3,9 @@
   "version": "1.1.2",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types" : "./dist/index.d.ts",
+  "types": "./dist/index.d.ts",
   "type": "module",
+  "keywords": ["react", "typescript", "perspective", "transform", "projection-mapping"],
   "files": [
     "dist"
   ],
@@ -30,8 +31,12 @@
     "type": "git",
     "url": "git+https://github.com/ZilbaM/react-perspective-transform"
   },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+  "peerDependencies": {
+    "react": "^17 || ^18",
+    "react-dom": "^17 || ^18"
+  },
+  "externals": {
+    "react": "react",
+    "react-dom": "react-dom"
   }
 }
