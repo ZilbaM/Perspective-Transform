@@ -1,22 +1,19 @@
-# react-perspective-transform
+# React Perspective Transform
 
-A lightweight React component that applies a perspective transform to its children, allowing you to shift each corner independently. Useful for drag-and-drop transformations, interactive demos, or animating UI elements.
+A lightweight **React** component that applies a perspective transform to its children, allowing you to manipulate each corner independently. Perfect for interactive demos, image warping, or advanced UI effects.
 
-## Table of Contents
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-- [react-perspective-transform](#react-perspective-transform)
-  - [Table of Contents](#table-of-contents)
-  - [Installation](#installation)
-  - [Basic Usage](#basic-usage)
-    - [Explanation](#explanation)
-  - [Props](#props)
-    - [`children`](#children)
-  - [Advanced Editing](#advanced-editing)
-    - [Interaction Details](#interaction-details)
-  - [How It Works](#how-it-works)
-  - [Development and Contributing](#development-and-contributing)
-    - [Contributing](#contributing)
-  - [License](#license)
+## Overview
+
+`react-perspective-transform` handles corner-based transformations with just CSS `matrix3d`, preserving the crispness of text and images. It supports:
+
+- **Draggable Corners**: Press <kbd>Shift + P</kbd> (or custom keys) to toggle edit mode.
+- **Controlled or Uncontrolled** usage
+- **Optional Local Storage** persistence
+- **Matrix-based transforms** for smooth performance
+
+For detailed documentation, including advanced usage, API reference, and guides, visit the **[official docs site](https://zilbam.github.io/react-perspective-transform)**.
 
 ---
 
@@ -24,122 +21,72 @@ A lightweight React component that applies a perspective transform to its childr
 
 ```bash
 npm install react-perspective-transform
-```
-
-or
-
-```bash
+# or
 yarn add react-perspective-transform
 ```
 
-## Basic Usage
-
-Here's a quick example of how to use `react-perspective-transform` in your React application:
+## Quick Start
 
 ```tsx
-import React from "react";
-import PerspectiveTransform from "react-perspective-transform";
+import React from 'react';
+import PerspectiveTransform from 'react-perspective-transform';
 
-function App() {
+export default function App() {
   return (
-    <div style={{ width: 400, height: 400, border: "1px solid #ccc" }}>
+    <div style={{ width: 400, height: 300, border: '1px solid #ccc' }}>
       <PerspectiveTransform>
-        <div
-          style={{
-            backgroundColor: "lightblue",
-            width: "100%",
-            height: "100%",
-          }}
-        >
-          <h3>Hello World</h3>
-        </div>
+        <img src="/path/to/image.jpg" alt="Warp Me" style={{ width: '100%' }} />
       </PerspectiveTransform>
     </div>
   );
 }
-
-export default App;
 ```
 
-### Explanation
-
-1. **Wrapping Content**: The `PerspectiveTransform` component will apply a transform to whatever you place inside it.
-2. **Container Size**: For transformations to work correctly, ensure the parent container has a defined width and height.
-3. **Dragging Corners**: By default, corners are not visible. Press `Shift+P` in the browser to toggle corner edit mode.
+1. **Wrap your content** in `<PerspectiveTransform>`.
+2. **Press <kbd>Shift + P</kbd>** in the browser to toggle edit mode and drag corners.
+3. Adjust the parent container’s width and height to see real transformations.
 
 ---
 
-## Props
+## Documentation
 
-### `children`
+Looking for **advanced guides**, **API reference**, or **contribution docs**?
+Check out the **[Complete Documentation](./docs/intro.md)** for:
 
-Type: `React.ReactNode`
-
-- The content you want to apply the perspective transform to.
-
-- (No other props are needed—transformation logic is managed internally.)_
-
----
-
-## Advanced Editing
-
-By pressing `Shift + P` in the browser, you can toggle an **edit mode** that shows draggable corner points. Drag the corners around to change the perspective.
-
-### Interaction Details
-
-- **Corner Points**: Each corner can be positioned independently.
-- **Transforms**: The transform is recalculated on each drag.
-- **React Synthetic vs. DOM Events**: The corners use native DOM events under the hood to capture movement.
+- **Controlled vs. Uncontrolled** usage  
+- **Edit Mode** configuration and hotkeys  
+- **Persistence** with `storageKey`  
+- **TypeDoc** API reference  
+- **FAQ** and more
 
 ---
 
-## How It Works
+## Contributing
 
-Unlike some libraries that copy your content into a `<canvas>` for perspective transformations—which can cause pixelation or aliasing—**react-perspective-transform** relies on the native **CSS transform** property. This ensures that:
-
-- **No Loss in Quality**: Text, images, and other elements remain sharp as they are rendered using HTML/CSS rather than rasterized canvas pixels.
-- **Better Performance**: The library only recalculates and applies a `matrix3d` CSS transform, avoiding the overhead of redrawing onto a canvas.
-- **Seamless Integration**: You can nest standard React components or HTML elements inside, and they’ll transform correctly without additional effort.
-
-Under the hood, the library calculates a perspective transform using four draggable corners. These corners update the `matrix3d` function in real time, letting you dynamically warp your layout without re-rasterizing the content.
-
----
-
-## Development and Contributing
-
-1. **Clone the Repo**:
-
+1. **Clone the repository**:
    ```bash
    git clone https://github.com/ZilbaM/react-perspective-transform.git
    cd react-perspective-transform
    ```
 
-2. **Install Dependencies**:
-
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Run the Build**:
-
+3. **Build and test**:
    ```bash
    npm run build
+   npm test
    ```
 
-4. **Local Development**:
-
-   ```bash
-   npm start
-   ```
-
-   This will start a dev server (if configured) so you can test changes.
-
-### Contributing
-
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change. Make sure to add or update tests as appropriate.
+4. **Open a pull request**:
+   - Please open an issue to discuss major changes.
+   - Ensure tests pass and updates are covered.
 
 ---
 
 ## License
 
-[MIT](./LICENSE)
+[MIT License](./LICENSE) © 2023 ZilbaM
+
