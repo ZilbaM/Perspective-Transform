@@ -88,5 +88,5 @@ Check out the **[Complete Documentation](./docs/intro.md)** for:
 
 ## License
 
-[MIT License](./LICENSE) © 2023 ZilbaM
+[MIT License](./LICENSE) © 2025 ZilbaM
 
