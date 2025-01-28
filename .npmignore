@@ -1,6 +1,9 @@
 # Exclure les fichiers sources 
 /src 
 
+# Exclure la documentation
+/docs
+
 # Exclure la configuration locale 
 /.babelrc 
 /webpack.config.js 
