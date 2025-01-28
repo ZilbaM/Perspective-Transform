@@ -61,7 +61,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
   useEffect(() => {
     if (storageKey && hasHydrated) {
       try {
-        console.log("Saving points to localStorage:", points);
         localStorage.setItem(storageKey, JSON.stringify(points));
       } catch (e) {
         console.error("Failed to store perspective points", e);
@@ -72,10 +71,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
   // Handle controlled points
   useEffect(() => {
     if (controlledPoints) {
-      console.log(
-        "Controlled points detected, updating state:",
-        controlledPoints
-      );
       setPoints(controlledPoints);
     }
   }, [controlledPoints]);
@@ -95,7 +90,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
           parsed.bottomRight &&
           parsed.bottomLeft
         ) {
-          console.log("Parsed points:", parsed);
           setPoints(parsed);
         }
       } catch (e) {
@@ -109,7 +103,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.shiftKey && toggleKeys.includes(e.key.toLowerCase())) {
-        console.log("Toggle edit mode triggered", !isEditMode);
         if (onEditableChange) {
           onEditableChange(!isEditMode);
         } else {
@@ -130,7 +123,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       const { width, height } = entry.contentRect;
-      console.log("ResizeObserver detected size:", { width, height });
       if (width > 0 && height > 0) {
         setPoints((prevPoints) => ({
           ...prevPoints,
@@ -152,7 +144,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     if (!containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
-    console.log("Container rect:", rect);
     if (rect.width === 0 || rect.height === 0) return;
 
     const srcCorners: Corner[] = [
@@ -168,7 +159,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
       points.bottomLeft,
     ];
     const transform = computeCssMatrix(srcCorners, dstCorners);
-    console.log("Computed transform matrix:", transform);
     setMatrix(transform);
   }, [points]);
 
@@ -308,13 +298,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
           ...points,
           [corner]: { x, y },
         };
-
-        console.log(
-          "Dragging corner:",
-          corner,
-          "Updated points:",
-          updatedPoints
-        );
 
         setPoints(updatedPoints);
         onPointsChange?.(updatedPoints);
