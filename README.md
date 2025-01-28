@@ -77,7 +77,7 @@ Type: `React.ReactNode`
 
 - The content you want to apply the perspective transform to.
 
-_(No other props are needed—transformation logic is managed internally.)_
+- (No other props are needed—transformation logic is managed internally.)_
 
 ---
 
