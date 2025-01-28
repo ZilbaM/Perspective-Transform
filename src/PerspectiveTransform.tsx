@@ -25,9 +25,15 @@ interface PerspectiveTransformProps {
   children: ReactNode;
   points?: Points; // Controlled points prop
   onPointsChange?: (points: Points) => void; // Callback for points change
+  storageKey?: string; // Key for persisting state in localStorage
 }
 
-const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children, points: controlledPoints, onPointsChange }) => {
+const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
+  children,
+  points: controlledPoints,
+  onPointsChange,
+  storageKey,
+}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [points, setPoints] = useState<Points>(
     controlledPoints || {
@@ -39,6 +45,39 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children, points:
   );
   const [matrix, setMatrix] = useState("");
   const [editable, setEditable] = useState(false);
+
+  // On mount, attempt to load from localStorage (uncontrolled scenario)
+  useEffect(() => {
+    if (!controlledPoints && storageKey) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved) as Points;
+          if (
+            parsed.topLeft &&
+            parsed.topRight &&
+            parsed.bottomRight &&
+            parsed.bottomLeft
+          ) {
+            setPoints(parsed);
+          }
+        } catch (e) {
+          console.error("Failed to parse stored perspective points", e);
+        }
+      }
+    }
+  }, [controlledPoints, storageKey]);
+
+  // Whenever points change, save them to localStorage if a storageKey is provided
+  useEffect(() => {
+    if (storageKey) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(points));
+      } catch (e) {
+        console.error("Failed to store perspective points", e);
+      }
+    }
+  }, [points, storageKey]);
 
   // Sync controlled points with internal state
   useEffect(() => {
@@ -173,6 +212,7 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children, points:
   }
 
   useLayoutEffect(() => {
+    // Only adjust if we do NOT have controlledPoints
     if (!controlledPoints && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
@@ -185,7 +225,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children, points:
       }
     }
   }, [children, controlledPoints]);
-  
 
   useLayoutEffect(() => {
     if (containerRef.current) {
