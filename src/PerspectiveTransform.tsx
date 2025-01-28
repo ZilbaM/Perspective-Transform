@@ -23,9 +23,39 @@ interface Points {
 
 interface PerspectiveTransformProps {
   children: ReactNode;
-  points?: Points; // Controlled points prop
-  onPointsChange?: (points: Points) => void; // Callback for points change
-  storageKey?: string; // Key for persisting state in localStorage
+
+  /**
+   * Points can be controlled externally. If provided, this overrides internal state.
+   */
+  points?: Points;
+
+  /**
+   * Callback for whenever the points change (e.g. user drags a corner).
+   */
+  onPointsChange?: (points: Points) => void;
+
+  /**
+   * Key for persisting state in localStorage (uncontrolled scenario only).
+   */
+  storageKey?: string;
+
+  /**
+   * If provided, controls whether the PerspectiveTransform is in "edit" mode.
+   * If omitted, SHIFT+key toggles local edit mode.
+   */
+  editable?: boolean;
+
+  /**
+   * Callback when the edit mode toggles. Useful if you want to track/toggle
+   * edit state from outside (controlled scenario), or combine with local.
+   */
+  onEditableChange?: (nextEditable: boolean) => void;
+
+  /**
+   * Keys (lowercase) that should toggle edit mode when pressed with SHIFT.
+   * Defaults to ["p"].
+   */
+  toggleKeys?: string[];
 }
 
 const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
@@ -33,8 +63,13 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
   points: controlledPoints,
   onPointsChange,
   storageKey,
+  editable,
+  onEditableChange,
+  toggleKeys = ["p"],
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Local state for corners
   const [points, setPoints] = useState<Points>(
     controlledPoints || {
       topLeft: { x: 0, y: 0 },
@@ -43,8 +78,15 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
       bottomLeft: { x: 0, y: 100 },
     }
   );
+
+  // Local state for edit mode (when 'editable' is not controlled)
+  const [localEditable, setLocalEditable] = useState(false);
+
+  // Merge localEditable with the controlled "editable" prop
+  // If 'editable' is defined, it takes precedence, otherwise we rely on localEditable.
+  const isEditMode = editable !== undefined ? editable : localEditable;
+
   const [matrix, setMatrix] = useState("");
-  const [editable, setEditable] = useState(false);
 
   // On mount, attempt to load from localStorage (uncontrolled scenario)
   useEffect(() => {
@@ -86,7 +128,7 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     }
   }, [controlledPoints]);
 
-  // Function to compute the CSS matrix
+  // Compute the CSS matrix
   function computeCssMatrix(srcPoints: Corner[], dstPoints: Corner[]): string {
     function solve(A: number[], b: number[]): number[] | null {
       const det =
@@ -95,7 +137,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
         A[2] * (A[3] * A[7] - A[4] * A[6]);
 
       if (det === 0) return null;
-
       const invDet = 1 / det;
 
       const adjA = [
@@ -184,7 +225,6 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     if (!m1 || !m2) return "";
 
     const m3 = multmm(m2, adj(m1));
-
     for (let i = 0; i < m3.length; i += 1) {
       m3[i] /= m3[8];
     }
@@ -211,8 +251,40 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     return `matrix3d(${matrix3d.join(",")})`;
   }
 
+  // SHIFT+ key toggling logic, even if we have a controlled editable.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.shiftKey && toggleKeys.includes(e.key.toLowerCase())) {
+        // We'll either use onEditableChange if provided
+        // or toggle localEditable if editable is uncontrolled.
+
+        // If 'editable' is provided, treat it as controlled.
+        // We can still call onEditableChange to request the parent to toggle.
+        if (onEditableChange) {
+          onEditableChange(!isEditMode);
+        } else {
+          // Fallback if no onEditableChange is provided:
+          // just toggle local state. If 'editable' is defined
+          // but there's no onEditableChange, we override the parent-provided state.
+          // That might cause a mismatch, but it's what the user requested.
+          if (editable !== undefined) {
+            console.warn(
+              "PerspectiveTransform: Toggling local edit mode, but 'editable' prop is controlled without onEditableChange. This can lead to inconsistent state."
+            );
+          }
+          setLocalEditable((prev) => !prev);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isEditMode, onEditableChange, editable, toggleKeys]);
+
+  // Adjust corners if we have no controlled points
   useLayoutEffect(() => {
-    // Only adjust if we do NOT have controlledPoints
     if (!controlledPoints && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
@@ -226,6 +298,7 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     }
   }, [children, controlledPoints]);
 
+  // Recompute matrix whenever points change
   useLayoutEffect(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
@@ -277,32 +350,11 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     document.addEventListener("mouseup", onUp);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.shiftKey && (e.key === "p" || e.key === "P")) {
-        setEditable((prevEditable) => !prevEditable);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
   return (
     <div ref={containerRef} className="perspective-container">
-      <div
-        style={{
-          transform: matrix,
-          transformOrigin: "0 0",
-          width: "100%",
-          height: "100%",
-        }}
-      >
-        {children}
-      </div>
-
-      {editable &&
+      {/* Show alignment guides only if isEditMode == true */}
+tr
+      {isEditMode &&
         Object.entries(points).map(([corner, { x, y }]) => (
           <div
             key={corner}
