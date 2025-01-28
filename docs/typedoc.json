@@ -1,8 +1,0 @@
-{
-    "entryPoints": ["../src/index.tsx"], // Adjust path to your main library entry
-    "out": "docs/api",                  // Output Markdown files to "docs/docs/api"
-    "plugin": ["typedoc-plugin-markdown"],
-    "tsconfig": "../tsconfig.json",     // Use your library's tsconfig.json
-    "readme": "none"                    // Skip the README file in the API docs
-}
-  
