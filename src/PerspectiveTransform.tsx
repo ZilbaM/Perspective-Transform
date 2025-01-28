@@ -23,18 +23,29 @@ interface Points {
 
 interface PerspectiveTransformProps {
   children: ReactNode;
+  points?: Points; // Controlled points prop
+  onPointsChange?: (points: Points) => void; // Callback for points change
 }
 
-const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children }) => {
+const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children, points: controlledPoints, onPointsChange }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [points, setPoints] = useState<Points>({
-    topLeft: { x: 0, y: 0 },
-    topRight: { x: 100, y: 0 },
-    bottomRight: { x: 100, y: 100 },
-    bottomLeft: { x: 0, y: 100 },
-  });
+  const [points, setPoints] = useState<Points>(
+    controlledPoints || {
+      topLeft: { x: 0, y: 0 },
+      topRight: { x: 100, y: 0 },
+      bottomRight: { x: 100, y: 100 },
+      bottomLeft: { x: 0, y: 100 },
+    }
+  );
   const [matrix, setMatrix] = useState("");
   const [editable, setEditable] = useState(false);
+
+  // Sync controlled points with internal state
+  useEffect(() => {
+    if (controlledPoints) {
+      setPoints(controlledPoints);
+    }
+  }, [controlledPoints]);
 
   // Function to compute the CSS matrix
   function computeCssMatrix(srcPoints: Corner[], dstPoints: Corner[]): string {
@@ -162,18 +173,19 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children }) => {
   }
 
   useLayoutEffect(() => {
-    if (containerRef.current) {
+    if (!controlledPoints && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
-        setPoints({
-          topLeft: { x: 0, y: 0 },
+        setPoints((prevPoints) => ({
+          ...prevPoints,
           topRight: { x: rect.width, y: 0 },
           bottomRight: { x: rect.width, y: rect.height },
           bottomLeft: { x: 0, y: rect.height },
-        });
+        }));
       }
     }
-  }, [children]);
+  }, [children, controlledPoints]);
+  
 
   useLayoutEffect(() => {
     if (containerRef.current) {
@@ -207,10 +219,13 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children }) => {
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
 
-        setPoints((prevPoints) => ({
-          ...prevPoints,
+        const updatedPoints = {
+          ...points,
           [corner]: { x, y },
-        }));
+        };
+
+        setPoints(updatedPoints);
+        onPointsChange?.(updatedPoints);
       }
     };
 
@@ -261,4 +276,4 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({ children }) => {
   );
 };
 
-export default PerspectiveTransform
+export default PerspectiveTransform;
