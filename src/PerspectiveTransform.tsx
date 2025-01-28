@@ -1,3 +1,11 @@
+/**
+ * PerspectiveTransform.tsx
+ *
+ * A React component to apply an interactive perspective transform to its children.
+ * Supports controlled and uncontrolled modes, optional localStorage persistence, and
+ * shift+key toggling for edit mode.
+ */
+
 import React, {
   useState,
   useRef,
@@ -9,55 +17,79 @@ import React, {
 } from "react";
 import "./style.css";
 
-interface Corner {
+/**
+ * Represents an (x,y) coordinate for a corner.
+ */
+export interface Corner {
   x: number;
   y: number;
 }
 
-interface Points {
+/**
+ * Represents all four corner coordinates.
+ */
+export interface Points {
   topLeft: Corner;
   topRight: Corner;
   bottomRight: Corner;
   bottomLeft: Corner;
 }
 
-interface PerspectiveTransformProps {
+/**
+ * Props for the PerspectiveTransform component.
+ */
+export interface PerspectiveTransformProps {
+  /**
+   * The child node(s) to which we apply the perspective transform.
+   * Usually an image, video, or other content.
+   */
   children: ReactNode;
 
   /**
-   * Points can be controlled externally. If provided, this overrides internal state.
+   * If provided, points become controlled from outside.
+   * The component will always use these points instead of its local state.
    */
   points?: Points;
 
   /**
-   * Callback for whenever the points change (e.g. user drags a corner).
+   * Called whenever corner points change, e.g., when a user drags them.
    */
   onPointsChange?: (points: Points) => void;
 
   /**
-   * Key for persisting state in localStorage (uncontrolled scenario only).
+   * If set, the component will store and retrieve corner points from localStorage
+   * under this key (uncontrolled scenario). If `points` is controlled, localStorage
+   * logic is not used.
    */
   storageKey?: string;
 
   /**
-   * If provided, controls whether the PerspectiveTransform is in "edit" mode.
-   * If omitted, SHIFT+key toggles local edit mode.
+   * Whether the component is currently in edit mode. If provided, this prop controls
+   * edit mode externally. If omitted, SHIFT+[toggleKeys] toggles a local edit mode.
    */
   editable?: boolean;
 
   /**
-   * Callback when the edit mode toggles. Useful if you want to track/toggle
-   * edit state from outside (controlled scenario), or combine with local.
+   * If edit mode is controlled from outside, this callback is triggered when SHIFT+[toggleKeys]
+   * is pressed. Passes the next boolean value for edit mode.
    */
   onEditableChange?: (nextEditable: boolean) => void;
 
   /**
-   * Keys (lowercase) that should toggle edit mode when pressed with SHIFT.
+   * An array of lowercase keys that, when pressed with SHIFT, toggle edit mode.
    * Defaults to ["p"].
    */
   toggleKeys?: string[];
 }
 
+/**
+ * A React component that applies a perspective transform to its children.
+ * It can be controlled (passing `points` and `editable`) or uncontrolled
+ * (managing points internally, optionally persisting them to localStorage).
+ *
+ * In edit mode, users can drag corner handles to adjust the perspective.
+ * Edit mode can be toggled by SHIFT+[toggleKeys] or controlled via the `editable` prop.
+ */
 const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
   children,
   points: controlledPoints,
@@ -67,9 +99,15 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
   onEditableChange,
   toggleKeys = ["p"],
 }) => {
+  /**
+   * A reference to the outer container for measuring its dimensions.
+   */
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Local state for corners
+  /**
+   * Local state for corner points when uncontrolled.
+   * If `points` is passed from outside, we'll sync to that.
+   */
   const [points, setPoints] = useState<Points>(
     controlledPoints || {
       topLeft: { x: 0, y: 0 },
@@ -79,16 +117,27 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     }
   );
 
-  // Local state for edit mode (when 'editable' is not controlled)
+  /**
+   * Local state for edit mode when `editable` is not provided.
+   */
   const [localEditable, setLocalEditable] = useState(false);
 
-  // Merge localEditable with the controlled "editable" prop
-  // If 'editable' is defined, it takes precedence, otherwise we rely on localEditable.
+  /**
+   * Computed boolean for whether we're in edit mode.
+   * If `editable` is defined, it takes precedence.
+   * Otherwise, we use localEditable.
+   */
   const isEditMode = editable !== undefined ? editable : localEditable;
 
+  /**
+   * CSS matrix string for the perspective transform.
+   */
   const [matrix, setMatrix] = useState("");
 
-  // On mount, attempt to load from localStorage (uncontrolled scenario)
+  /**
+   * On mount, if `storageKey` is provided and we have no controlled points,
+   * load any saved corner points from localStorage.
+   */
   useEffect(() => {
     if (!controlledPoints && storageKey) {
       const saved = localStorage.getItem(storageKey);
@@ -110,7 +159,9 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     }
   }, [controlledPoints, storageKey]);
 
-  // Whenever points change, save them to localStorage if a storageKey is provided
+  /**
+   * Whenever `points` change, store them in localStorage (if `storageKey` is set).
+   */
   useEffect(() => {
     if (storageKey) {
       try {
@@ -121,15 +172,26 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     }
   }, [points, storageKey]);
 
-  // Sync controlled points with internal state
+  /**
+   * If `points` is passed from outside (controlled), sync our local state.
+   */
   useEffect(() => {
     if (controlledPoints) {
       setPoints(controlledPoints);
     }
   }, [controlledPoints]);
 
-  // Compute the CSS matrix
+  /**
+   * Helper function to compute a CSS 3D matrix for the perspective transform.
+   *
+   * @param srcPoints The rectangle representing the container's original corners.
+   * @param dstPoints The user-manipulated corner coordinates.
+   * @returns A CSS `matrix3d(...)` string.
+   */
   function computeCssMatrix(srcPoints: Corner[], dstPoints: Corner[]): string {
+    /**
+     * Solve a system of linear equations.
+     */
     function solve(A: number[], b: number[]): number[] | null {
       const det =
         A[0] * (A[4] * A[8] - A[5] * A[7]) -
@@ -158,6 +220,9 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
       ];
     }
 
+    /**
+     * Compute the adjoint matrix.
+     */
     function adj(m: number[]): number[] {
       return [
         m[4] * m[8] - m[5] * m[7],
@@ -172,6 +237,9 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
       ];
     }
 
+    /**
+     * Multiply two 3x3 matrices.
+     */
     function multmm(a: number[], b: number[]): number[] {
       const c: number[] = [];
       for (let i = 0; i < 3; i += 1) {
@@ -186,6 +254,9 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
       return c;
     }
 
+    /**
+     * Convert from 3 corner vectors + 1 target vector to a 3x3 transform matrix.
+     */
     function basisToPoints(
       p1: Corner,
       p2: Corner,
@@ -210,25 +281,20 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
       return m2;
     }
 
-    const m1 = basisToPoints(
-      srcPoints[0],
-      srcPoints[1],
-      srcPoints[2],
-      srcPoints[3]
-    );
-    const m2 = basisToPoints(
-      dstPoints[0],
-      dstPoints[1],
-      dstPoints[2],
-      dstPoints[3]
-    );
+    // Compute basis transformations for source and destination corners.
+    const m1 = basisToPoints(srcPoints[0], srcPoints[1], srcPoints[2], srcPoints[3]);
+    const m2 = basisToPoints(dstPoints[0], dstPoints[1], dstPoints[2], dstPoints[3]);
     if (!m1 || !m2) return "";
 
+    // Multiply m2 * adj(m1) to get final matrix.
     const m3 = multmm(m2, adj(m1));
+
+    // Normalize by the last element.
     for (let i = 0; i < m3.length; i += 1) {
       m3[i] /= m3[8];
     }
 
+    // Convert to CSS matrix3d format.
     const matrix3d = [
       m3[0],
       m3[3],
@@ -251,25 +317,22 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     return `matrix3d(${matrix3d.join(",")})`;
   }
 
-  // SHIFT+ key toggling logic, even if we have a controlled editable.
+  /**
+   * SHIFT + [toggleKeys] toggling logic, for both controlled and uncontrolled usage.
+   */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.shiftKey && toggleKeys.includes(e.key.toLowerCase())) {
-        // We'll either use onEditableChange if provided
-        // or toggle localEditable if editable is uncontrolled.
-
-        // If 'editable' is provided, treat it as controlled.
-        // We can still call onEditableChange to request the parent to toggle.
+        // If we have onEditableChange, call it to request toggling from the parent.
         if (onEditableChange) {
           onEditableChange(!isEditMode);
         } else {
-          // Fallback if no onEditableChange is provided:
-          // just toggle local state. If 'editable' is defined
-          // but there's no onEditableChange, we override the parent-provided state.
-          // That might cause a mismatch, but it's what the user requested.
+          // Otherwise, if there's a controlled 'editable' but no onEditableChange,
+          // toggling local state might conflict with the parent's state.
           if (editable !== undefined) {
             console.warn(
-              "PerspectiveTransform: Toggling local edit mode, but 'editable' prop is controlled without onEditableChange. This can lead to inconsistent state."
+              "PerspectiveTransform: Toggling local edit mode, but 'editable' prop is controlled without 'onEditableChange'. " +
+                "This can lead to inconsistent state."
             );
           }
           setLocalEditable((prev) => !prev);
@@ -283,7 +346,9 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     };
   }, [isEditMode, onEditableChange, editable, toggleKeys]);
 
-  // Adjust corners if we have no controlled points
+  /**
+   * If no controlled points are provided, adjust the corners once based on container size.
+   */
   useLayoutEffect(() => {
     if (!controlledPoints && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
@@ -298,7 +363,9 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     }
   }, [children, controlledPoints]);
 
-  // Recompute matrix whenever points change
+  /**
+   * Recompute the perspective transform matrix whenever points change.
+   */
   useLayoutEffect(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
@@ -321,10 +388,17 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
     }
   }, [points]);
 
-  const handleDrag = (e: React.MouseEvent<HTMLDivElement>, corner: string) => {
+  /**
+   * Handler for when the user starts dragging a specific corner.
+   * Tracks mouse movement and updates corner positions.
+   */
+  const handleDrag = (e: MouseEvent<HTMLDivElement>, corner: string) => {
     e.preventDefault();
     e.stopPropagation();
 
+    /**
+     * Move event updates the selected corner.
+     */
     const onMove = (event: globalThis.MouseEvent) => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
@@ -341,6 +415,9 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
       }
     };
 
+    /**
+     * Cleanup after mouse up.
+     */
     const onUp = () => {
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
@@ -352,8 +429,26 @@ const PerspectiveTransform: FC<PerspectiveTransformProps> = ({
 
   return (
     <div ref={containerRef} className="perspective-container">
-      {/* Show alignment guides only if isEditMode == true */}
-tr
+      {/**
+       * The transformed child content. We apply the matrix to this wrapper
+       * so the alignment guides also transform.
+       */}
+      <div
+        style={{
+          transform: matrix,
+          transformOrigin: "0 0",
+          width: "100%",
+          height: "100%",
+          position: "relative",
+        }}
+      >
+        {isEditMode && <div className="alignment-guides" />}
+        {children}
+      </div>
+
+      {/**
+       * Corner control points, rendered only in edit mode.
+       */}
       {isEditMode &&
         Object.entries(points).map(([corner, { x, y }]) => (
           <div
