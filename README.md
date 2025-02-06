@@ -74,13 +74,12 @@ Check out the **[Complete Documentation](./docs/intro.md)** for:
    npm install
    ```
 
-3. **Build and test**:
+3. **Build**:
    ```bash
    npm run build
-   npm test
    ```
 
-4. **Open a pull request**:
+5. **Open a pull request**:
    - Please open an issue to discuss major changes.
    - Ensure tests pass and updates are covered.
 
